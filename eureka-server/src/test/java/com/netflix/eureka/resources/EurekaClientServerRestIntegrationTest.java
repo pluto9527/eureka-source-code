@@ -90,6 +90,9 @@ public class EurekaClientServerRestIntegrationTest {
                 serverCodecs,
                 eurekaServiceUrl
         );
+
+        //系统hang住，方便别的client去注册它
+        Thread.sleep(Long.MAX_VALUE);
     }
 
     @AfterClass
@@ -232,7 +235,7 @@ public class EurekaClientServerRestIntegrationTest {
     }
 
     private static void startServer() throws Exception {
-        File warFile = findWar();
+        /*File warFile = findWar();
 
         server = new Server(8080);
 
@@ -241,6 +244,19 @@ public class EurekaClientServerRestIntegrationTest {
         webapp.setWar(warFile.getAbsolutePath());
         server.setHandler(webapp);
 
+        server.start();
+
+        eurekaServiceUrl = "http://localhost:8080/v2";*/
+
+        //上面的源代码是 先把eureka-server打成一个war包，然后他这里找到那个war包去启动
+        //启动jeety容器，jetty容器帮我们启动这个web应用
+        server = new Server(8080);
+
+        WebAppContext webAppCtx = new WebAppContext(new File("./eureka-server/src/main/webapp").getAbsolutePath(), "/");
+        webAppCtx.setDescriptor(new File("./eureka-server/src/main/webapp/WEB-INF/web.xml").getAbsolutePath());
+        webAppCtx.setResourceBase(new File("./eureka-server/src/main/resources").getAbsolutePath());
+        webAppCtx.setClassLoader(Thread.currentThread().getContextClassLoader());
+        server.setHandler(webAppCtx);
         server.start();
 
         eurekaServiceUrl = "http://localhost:8080/v2";
